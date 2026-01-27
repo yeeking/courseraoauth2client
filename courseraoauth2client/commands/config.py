@@ -22,10 +22,8 @@ You may install it from source, or via pip.
 
 from courseraoauth2client import oauth2
 import argparse
-import requests
 import logging
 import time
-import sys
 
 
 def authorize(args):
@@ -36,47 +34,6 @@ def authorize(args):
     oauth2_instance = oauth2.build_oauth2(args.app, args)
     oauth2_instance.build_authorizer()
     logging.info('Application "%s" authorized!', args.app)
-
-
-def check_auth(args):
-    """
-    Checks courseraoauth2client's connectivity to the coursera.org API servers
-    for a specific application
-    """
-    oauth2_instance = oauth2.build_oauth2(args.app, args)
-    auth = oauth2_instance.build_authorizer()
-    my_profile_url = (
-        'https://api.coursera.org/api/externalBasicProfiles.v1?'
-        'q=me&fields=name'
-    )
-    r = requests.get(my_profile_url, auth=auth)
-    if r.status_code != 200:
-        logging.error('Received response code %s from the basic profile API.',
-                      r.status_code)
-        logging.debug('Response body:\n%s', r.text)
-        sys.exit(1)
-    try:
-        external_id = r.json()['elements'][0]['id']
-    except:
-        logging.error(
-            'Could not parse the external id out of the response body %s',
-            r.text)
-        external_id = None
-
-    try:
-        name = r.json()['elements'][0]['name']
-    except:
-        logging.error(
-            'Could not parse the name out of the response body %s',
-            r.text)
-        name = None
-
-    if not args.quiet > 0:
-        print 'Name: %s' % name
-        print 'External ID: %s' % external_id
-
-    if name is None or external_id is None:
-        sys.exit(1)
 
 
 def display_auth_cache(args):
@@ -127,13 +84,6 @@ def parser(subparsers):
         help=authorize.__doc__,
         parents=[app_subparser])
     parser_authorize.set_defaults(func=authorize)
-
-    # Ensure your auth is set up correctly
-    parser_check_auth = config_subparsers.add_parser(
-        'check-auth',
-        help=check_auth.__doc__,
-        parents=[app_subparser])
-    parser_check_auth.set_defaults(func=check_auth)
 
     parser_local_cache = config_subparsers.add_parser(
         'display-auth-cache',

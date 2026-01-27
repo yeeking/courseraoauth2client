@@ -51,9 +51,6 @@ Examples:
  - ``courseraoauth2client config authorize --app APP``
 
    Configures the tool to go through the `authorization secret <https://tools.ietf.org/html/rfc6749#section-4.1>`_ flow for application ``APP``.
- - ``courseraoauth2client config check-auth --app APP``
-
-   Checks whether the current instance can authorize against Coursera's API server for application ``APP``
 
 Usage
 -----------
@@ -64,7 +61,7 @@ Usage
   from courseraoauth2client import oauth2
   ...
   app = 'my_application_name'
-  url = 'https://api.coursera.org/api/externalBasicProfiles.v1?q=me&fields=name'
+  url = 'https://api.coursera.org/api/<your-api-endpoint>'
   auth = oauth2.build_oauth2(app=app).build_authorizer()
   response = requests.get(url, auth=auth)
   print response.json()

@@ -114,9 +114,9 @@ def _make_handler(state_token, done_function):
 
         def error_response(self, msg):
             logging.warning(
-                'Error response: %(msg)s. %(path)s',
-                msg=msg,
-                path=self.path)
+                'Error response: %s. %s',
+                msg,
+                self.path)
             self.send_response(400)
             self.send_header('Content-type', 'text/plain')
             self.end_headers()
@@ -124,18 +124,33 @@ def _make_handler(state_token, done_function):
 
         def do_GET(self):
             parsed = urlparse.urlparse(self.path)
+            if parsed.path == '/favicon.ico':
+                # Browsers may request favicon automatically during OAuth
+                # redirect handling; ignore it without warning noise.
+                self.send_response(204)
+                self.end_headers()
+                return
+
             if len(parsed.query) == 0 or parsed.path != '/callback':
                 self.error_response(
                     'We encountered a problem with your request.')
                 return
 
             params = urlparse.parse_qs(parsed.query)
-            if params['state'] != [state_token]:
+            if 'error' in params:
+                self.error_response(
+                    'OAuth2 provider returned an error: %s' %
+                    ','.join(params.get('error')))
+                return
+
+            state_values = params.get('state')
+            if state_values != [state_token]:
                 self.error_response(
                     'Attack detected: state tokens did not match!')
                 return
 
-            if len(params['code']) != 1:
+            code_values = params.get('code')
+            if code_values is None or len(code_values) != 1:
                 self.error_response('Wrong number of "code" query parameters.')
                 return
 
@@ -146,7 +161,7 @@ def _make_handler(state_token, done_function):
                 "courseraoauth2client: we have captured Coursera's response "
                 "code. Feel free to close this browser window now and return "
                 "to your terminal. Thanks!".encode('utf-8'))
-            done_function(params['code'][0])
+            done_function(code_values[0])
 
     return LocalServerHandler
 
@@ -325,8 +340,7 @@ class CourseraOAuth2(object):
 
         body = response.json()
         if 'access_token' not in body or 'expires_in' not in body:
-            logging.error('Malformed / missing fields in body. %(body)s',
-                          body=body)
+            logging.error('Malformed / missing fields in body. %s', body)
             raise OAuth2Exception(
                 'Malformed response body from token endpoint.')
 
@@ -386,8 +400,8 @@ class CourseraOAuth2(object):
             try:
                 subprocess.check_call(['open', authorization_url])
             except:
-                logging.exception('Could not call `open %(url)s`.',
-                                  url=authorization_url)
+                logging.exception('Could not call `open %s`.',
+                                  authorization_url)
 
         if self.local_webserver_port is not None:
             # Boot up a local webserver to retrieve the response.

@@ -43,7 +43,8 @@ def display_auth_cache(args):
     You must keep the tokens secure. Treat them as passwords.
     '''
     oauth2_instance = oauth2.build_oauth2(args.app, args)
-    if not args.quiet > 0:
+    quiet = args.quiet or 0
+    if quiet <= 0:
         token = oauth2_instance.token_cache['token']
         if not args.no_truncate and token is not None:
             token = token[:10] + '...'

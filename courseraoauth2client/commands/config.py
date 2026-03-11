@@ -47,19 +47,19 @@ def display_auth_cache(args):
         token = oauth2_instance.token_cache['token']
         if not args.no_truncate and token is not None:
             token = token[:10] + '...'
-        print "Auth token: %s" % token
+        print("Auth token: %s" % token)
 
         expires_time = oauth2_instance.token_cache['expires']
         expires_in = int((expires_time - time.time()) * 10) / 10.0
-        print "Auth token expires in: %s seconds." % expires_in
+        print("Auth token expires in: %s seconds." % expires_in)
 
         if 'refresh' in oauth2_instance.token_cache:
             refresh = oauth2_instance.token_cache['refresh']
             if not args.no_truncate and refresh is not None:
                 refresh = refresh[:10] + '...'
-            print "Refresh token: %s" % refresh
+            print("Refresh token: %s" % refresh)
         else:
-            print "No refresh token found."
+            print("No refresh token found.")
 
 
 def parser(subparsers):
